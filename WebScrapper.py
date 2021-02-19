@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
-from deep_translator import GoogleTranslator
 import requests
 import pandas as pd
 
+# DataFrame with all the car and ad info
 df = pd.DataFrame(columns=['Id', 'date', 'title', 'price', 'brand', 'model', 'sub_model', 'version', 'fuel',
                            'register_month', 'register_year', 'number_of_kilometers', 'nr_horses',
                            'seller_location', 'type_of_deal', 'type_of_seller', 'cubic_capacity', 'category', 'power',
@@ -10,8 +10,8 @@ df = pd.DataFrame(columns=['Id', 'date', 'title', 'price', 'brand', 'model', 'su
                            'open_ceiling', 'condition', 'co2_emission', 'upholstery', 'wheel_drive'])
 
 count = 0
-i = 0
-while i != 1:
+i = 1
+while i != 500:
 
     url = 'https://www.standvirtual.com/carros/'
     html_text = requests.get(url).text  # Get the html code
@@ -33,10 +33,18 @@ while i != 1:
         register_year = ad.find_all('li', class_='ds-param')[2].text
         number_of_kilometers = ad.find_all('li', class_='ds-param')[3].text
         nr_horses = ad.find_all('li', class_='ds-param')[4].text
-        price = ad.find('span', class_='offer-price__number ds-price-number').text
-        seller_location = ad.find('h4', class_='ds-location hidden-xs').find('span', class_='ds-location-region').text
-        type_of_deal = ad.find('span', class_='offer-price__details ds-price-complement').text  # Negociable or Fixed
-        # price
+
+        price = ad.find('span', class_='offer-price__number ds-price-number')  # price
+        if price is not None:
+            price = ad.find('span', class_='offer-price__number ds-price-number').text
+
+        seller_location = ad.find('span', class_='ds-location-region')
+        if seller_location is not None:
+            seller_location = ad.find('span', class_='ds-location-region').text
+
+        type_of_deal = ad.find('span', class_='offer-price__details ds-price-complement')  # Negociable or Fixed
+        if type_of_deal is not None:
+            type_of_deal = ad.find('span', class_='offer-price__details ds-price-complement').text
 
         # Get some more detailed data about the car ad
         link = ad.h2.a['href']  # Link to the main page of the ad to get more info
@@ -50,11 +58,14 @@ while i != 1:
         # the ads!
 
         # Get the info about when the ad was posted and the ID!
-        date_id = car_info.find_all('span', class_='offer-meta__value')
-        ad_id = date_id[0].text
-        ad_date = date_id[1].text
-        ad_date = GoogleTranslator(source='portuguese', target='english').translate(ad_date)
-
+        id_date_info = car_info.find_all('span', class_='offer-meta__value')
+        ad_date = None
+        ad_id = None
+        if len(id_date_info) != 0:
+            ad_date = id_date_info[0].text
+        id_info = car_info.find_all('span', class_='offer-meta__value', id="ad_id")
+        if len(id_info) != 0:
+            ad_id = id_info[0].text
 
         # All specs of the car
         type_seller = None
@@ -102,7 +113,6 @@ while i != 1:
                 nr_doors = specs.find('a', class_='offer-params__link').text
             elif specs.span.text == "Cor":
                 color = specs.find('a', class_='offer-params__link').text
-                color = GoogleTranslator(source='portuguese', target='english').translate(color)
             elif specs.span.text == "Aceita retoma":
                 return_yn = specs.find('a', class_='offer-params__link').text
             elif specs.span.text == "Possibilidade de financiamento":
@@ -117,17 +127,16 @@ while i != 1:
                 no_smoker = specs.find('a', class_='offer-params__link').text
             elif specs.span.text == "Tecto de Abrir":
                 open_ceiling = specs.find('a', class_='offer-params__link').text
-                open_ceiling = GoogleTranslator(source='portuguese', target='english').translate(open_ceiling)
             elif specs.span.text == "Emissões CO2":
                 co2_emission = specs.find('div', class_='offer-params__value').text
             elif specs.span.text == "Condição":
                 condition = specs.find('a', class_='offer-params__link').text
             elif specs.span.text == "Estofos":
                 upholstery = specs.find('a', class_='offer-params__link').text
-                upholstery = GoogleTranslator(source='portuguese', target='english').translate(upholstery)
             elif specs.span.text == "Tracção":
                 wheel_drive = specs.find('a', class_='offer-params__link').text
-        count += 1
+        count += 1  # Count every new car that is checked
+
         new_row = {'Id': ad_id, 'date': ad_date, 'title': title, 'price': price, 'brand': brand, 'model': model,
                    'sub_model': sub_model, 'version': version, 'fuel': fuel, 'register_month': register_month,
                    'register_year': register_year, 'number_of_kilometers': number_of_kilometers,
@@ -137,8 +146,9 @@ while i != 1:
                    'manual_auto': manual_auto, 'nr_gears': nr_gears, 'no_smoker': no_smoker,
                    'open_ceiling': open_ceiling, 'condition': condition, 'co2_emission': co2_emission,
                    'upholstery': upholstery, 'wheel_drive': wheel_drive}
-        df = df.append(new_row, ignore_index=True)
 
-        print(df)
+        df = df.append(new_row, ignore_index=True)
         print("Number of cars checked: {}".format(count))
     i += 1
+
+df.to_csv('C:/Users/joaod/OneDrive/Documentos/Faculdade/standvirtual_cars.csv')
