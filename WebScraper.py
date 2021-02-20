@@ -158,7 +158,7 @@ def find_cars(number_of_pages, file_number=0):  # Number of pages that you want 
             print("Number of cars checked: {}".format(count))
         i += 1
 
-    df.to_csv('C:/Users/joaod/Documents/standvirtual_cars.csv{}'.format(file_number))
+    df.to_csv('C:/Users/joaod/Documents/standvirtual_cars{}.csv'.format(file_number))
 
     # Change your directory, mine is C:/Users/joaod/Documents
 
