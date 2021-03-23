@@ -164,8 +164,8 @@ def find_cars(number_of_pages, file_number=0):  # Number of pages that you want 
 
 
 if __name__ == '__main__':  # This makes the program loop forever when you press
+    file = 0 # Number of the file that is being created
     while True:
-        file = 0  # Number of the file that is being created
         find_cars(100, file)  # I choose to run 100 car pages because I have just loop over the all website
         print("Waiting 12 hours")
         time.sleep(43200)  # Run another cicle after 12 hours
